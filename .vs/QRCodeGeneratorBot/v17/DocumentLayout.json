@@ -1,0 +1,98 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\QRCodeGeneratorBot\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{E0F96D44-6C11-4C91-BF80-4016637DAEA4}|QRCodeGeneratorBot\\QRCodeGeneratorBot.csproj|d:\\qrcodegeneratorbot\\qrcodegeneratorbot\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E0F96D44-6C11-4C91-BF80-4016637DAEA4}|QRCodeGeneratorBot\\QRCodeGeneratorBot.csproj|solutionrelative:qrcodegeneratorbot\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E0F96D44-6C11-4C91-BF80-4016637DAEA4}|QRCodeGeneratorBot\\QRCodeGeneratorBot.csproj|d:\\qrcodegeneratorbot\\qrcodegeneratorbot\\qrcode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E0F96D44-6C11-4C91-BF80-4016637DAEA4}|QRCodeGeneratorBot\\QRCodeGeneratorBot.csproj|solutionrelative:qrcodegeneratorbot\\qrcode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E0F96D44-6C11-4C91-BF80-4016637DAEA4}|QRCodeGeneratorBot\\QRCodeGeneratorBot.csproj|d:\\qrcodegeneratorbot\\qrcodegeneratorbot\\qrcodedata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E0F96D44-6C11-4C91-BF80-4016637DAEA4}|QRCodeGeneratorBot\\QRCodeGeneratorBot.csproj|solutionrelative:qrcodegeneratorbot\\qrcodedata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{E0F96D44-6C11-4C91-BF80-4016637DAEA4}|QRCodeGeneratorBot\\QRCodeGeneratorBot.csproj|d:\\qrcodegeneratorbot\\qrcodegeneratorbot\\pngbyteqrcode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{E0F96D44-6C11-4C91-BF80-4016637DAEA4}|QRCodeGeneratorBot\\QRCodeGeneratorBot.csproj|solutionrelative:qrcodegeneratorbot\\pngbyteqrcode.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 1,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedHeight": 200,
+          "SelectedChildIndex": 5,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{b1e99781-ab81-11d0-b683-00aa00a3ee26}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{40ea2e6b-2121-4bb8-a43e-c83c04b51041}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "QrCode.cs",
+              "DocumentMoniker": "D:\\QRCodeGeneratorBot\\QRCodeGeneratorBot\\QrCode.cs",
+              "RelativeDocumentMoniker": "QRCodeGeneratorBot\\QrCode.cs",
+              "ToolTip": "D:\\QRCodeGeneratorBot\\QRCodeGeneratorBot\\QrCode.cs",
+              "RelativeToolTip": "QRCodeGeneratorBot\\QrCode.cs",
+              "ViewState": "AgIAAE4AAAAAAAAAAAAAADkAAAAzAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-22T14:51:55.22Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PngByteQrCode.cs",
+              "DocumentMoniker": "D:\\QRCodeGeneratorBot\\QRCodeGeneratorBot\\PngByteQrCode.cs",
+              "RelativeDocumentMoniker": "QRCodeGeneratorBot\\PngByteQrCode.cs",
+              "ToolTip": "D:\\QRCodeGeneratorBot\\QRCodeGeneratorBot\\PngByteQrCode.cs",
+              "RelativeToolTip": "QRCodeGeneratorBot\\PngByteQrCode.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAAPAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-22T15:41:34.23Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "D:\\QRCodeGeneratorBot\\QRCodeGeneratorBot\\Program.cs",
+              "RelativeDocumentMoniker": "QRCodeGeneratorBot\\Program.cs",
+              "ToolTip": "D:\\QRCodeGeneratorBot\\QRCodeGeneratorBot\\Program.cs",
+              "RelativeToolTip": "QRCodeGeneratorBot\\Program.cs",
+              "ViewState": "AgIAABUAAAAAAAAAAAAAAA0AAABXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2024-12-12T02:04:38.669Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "QRCodeData.cs",
+              "DocumentMoniker": "D:\\QRCodeGeneratorBot\\QRCodeGeneratorBot\\QRCodeData.cs",
+              "RelativeDocumentMoniker": "QRCodeGeneratorBot\\QRCodeData.cs",
+              "ToolTip": "D:\\QRCodeGeneratorBot\\QRCodeGeneratorBot\\QRCodeData.cs",
+              "RelativeToolTip": "QRCodeGeneratorBot\\QRCodeData.cs",
+              "ViewState": "AgIAACoAAAAAAAAAAAAAABoAAAAvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-03-22T14:51:57.082Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
