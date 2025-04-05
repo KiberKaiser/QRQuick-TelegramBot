@@ -38,7 +38,19 @@ class Program
             );
             return; 
         }
+        else if (message.Text == "/scan")
+        {
+            string scanUrl = "https://scanapp.org/";
 
+            await botClient.SendTextMessageAsync(
+                chatId: message.Chat.Id,
+                text: $"🔍 Натисни на посилання, щоб відкрити веб-сканер QR-кодів:\n\n" +
+                      $"[📷 scanapp.org]({scanUrl})",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown,
+                cancellationToken: cancellationToken
+            );
+            return;
+        }
         var qrCodeData = QRCodeGenerator.CreateQrCode(message.Text, QRCodeGenerator.ECCLevel.M);
         using var qrCode = new PngByteQrCode(qrCodeData);
 
