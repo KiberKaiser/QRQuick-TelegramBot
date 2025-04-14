@@ -3,10 +3,14 @@ using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 using Telegram.Bot.Types.ReplyMarkups;
+using ZXing;
+using ZXing.SkiaSharp;
+using SkiaSharp;
+
 class Program
 {
     private static readonly TelegramBotClient Bot = new TelegramBotClient("NUMBER_TOKEN");
-     private static readonly Dictionary<long, string> UserContext = new();
+    private static readonly Dictionary<long, string> UserContext = new();
 
     static async Task Main()
     {
@@ -49,19 +53,66 @@ class Program
                     UserContext[chatId] = "phone";
                     break;
                 case "qr_scan":
-                    string scanUrl = "https://scanapp.org/";
-                    await botClient.SendTextMessageAsync(chatId, $"🔍 Натисни на посилання, щоб відкрити сканер:\n[📷 scanapp.org]({scanUrl})", parseMode: ParseMode.Markdown);
+                    await botClient.SendTextMessageAsync(chatId, "📷 Надішліть фото QR-коду у відповідь на це повідомлення.");
+                    UserContext[chatId] = "scan";
                     break;
             }
             await botClient.AnswerCallbackQueryAsync(callback.Id);
             return;
         }
 
-        if (update.Message?.Text == null) return;
+        if (update.Message == null) return;
 
         var message = update.Message;
         var chatIdText = message.Chat.Id;
+        
+        if (message.Photo != null)
+        {
+            if (!UserContext.TryGetValue(chatIdText, out var context) || context != "scan")
+            {
+                return;
+            }
 
+            var photo = message.Photo.Last();
+            var file = await botClient.GetFileAsync(photo.FileId, cancellationToken);
+            using var ms = new MemoryStream();
+            await botClient.DownloadFileAsync(file.FilePath, ms, cancellationToken);
+            ms.Seek(0, SeekOrigin.Begin);
+
+            using var skStream = new SKManagedStream(ms);
+            using var bitmap = SKBitmap.Decode(skStream);
+
+            if (bitmap == null)
+            {
+                await botClient.SendTextMessageAsync(chatIdText, "❗ Не вдалося зчитати зображення.");
+                return;
+            }
+
+            var reader = new BarcodeReader
+            {
+                AutoRotate = true,
+                TryInverted = true,
+                Options = new ZXing.Common.DecodingOptions
+                {
+                    TryHarder = true,
+                    PossibleFormats = new List<BarcodeFormat> { BarcodeFormat.QR_CODE }
+                }
+            };
+
+            var result = reader.Decode(bitmap);
+            if (result != null)
+            {
+                await botClient.SendTextMessageAsync(chatIdText, $"🔍 Вміст QR-коду:\n```\n{result.Text}\n```", parseMode: ParseMode.Markdown);
+            }
+            else
+            {
+                await botClient.SendTextMessageAsync(chatIdText, "❌ QR-код не розпізнано.");
+            }
+
+            UserContext.Remove(chatIdText);
+            return;
+        }
+        
         if (message.Text == "/start")
         {
             var keyboard = new InlineKeyboardMarkup(new[]
@@ -87,16 +138,28 @@ class Program
                 }
             });
 
-            await botClient.SendTextMessageAsync(chatId: chatIdText, text: "👋 Привіт! Я бот для генерації QR-кодів.\nОберіть дію нижче:", replyMarkup: keyboard, cancellationToken: cancellationToken);
+            await botClient.SendTextMessageAsync(
+                chatId: chatIdText,
+                text: "👋 Привіт! Я бот для генерації QR-кодів.\nОберіть дію нижче:",
+                replyMarkup: keyboard,
+                cancellationToken: cancellationToken
+            );
+
             return;
         }
 
-        if (UserContext.TryGetValue(chatIdText, out var context))
+        if (message.Text != null && UserContext.TryGetValue(chatIdText, out var contextText))
         {
+            if (contextText == "scan")
+            {
+                await botClient.SendTextMessageAsync(chatIdText, "❗ Надішліть, будь ласка, зображення з QR-кодом.");
+                return;
+            }
+
             string qrContent = message.Text.Trim();
             try
             {
-                switch (context)
+                switch (contextText)
                 {
                     case "wifi":
                         var wifi = qrContent.Split(';');
@@ -133,14 +196,18 @@ class Program
                 return;
             }
         }
+        
+        if (message.Text != null)
+        {
+            var fallbackData = QRCodeGenerator.CreateQrCode(message.Text, QRCodeGenerator.ECCLevel.M);
+            using var fallbackCode = new PngByteQrCode(fallbackData);
+            var fallbackBytes = fallbackCode.GetGraphic(10);
 
-        var fallbackData = QRCodeGenerator.CreateQrCode(message.Text, QRCodeGenerator.ECCLevel.M);
-        using var fallbackCode = new PngByteQrCode(fallbackData);
-        var fallbackBytes = fallbackCode.GetGraphic(10);
-
-        using var fallbackStream = new MemoryStream(fallbackBytes);
-        await botClient.SendPhotoAsync(chatId: chatIdText, photo: new InputOnlineFile(fallbackStream, "qrcode.png"), caption: "📦 Ось ваш QR-код!", cancellationToken: cancellationToken);
+            using var fallbackStream = new MemoryStream(fallbackBytes);
+            await botClient.SendPhotoAsync(chatId: chatIdText, photo: new InputOnlineFile(fallbackStream, "qrcode.png"), caption: "📦 Ось ваш QR-код!", cancellationToken: cancellationToken);
+        }
     }
+
     private static Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
         Console.WriteLine($"❌ Error: {exception.Message}");
