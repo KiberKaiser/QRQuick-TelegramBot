@@ -10,7 +10,7 @@ using SkiaSharp;
 class Program
 {
     private static readonly TelegramBotClient Bot = new TelegramBotClient("NUMBER_TOKEN");
-    private static readonly Dictionary<long, string> UserContext = new();
+     private static readonly Dictionary<long, string> UserContext = new();
 
     static async Task Main()
     {
@@ -25,9 +25,13 @@ class Program
         {
             var callback = update.CallbackQuery;
             var chatId = callback.Message.Chat.Id;
-
+            
             switch (callback.Data)
             {
+                  case "qr_logo":
+                    await botClient.SendTextMessageAsync(chatId, "🌐 Введіть посилання, яке потрібно додати до QR-коду:");
+                    UserContext[chatId] = "qr_with_logo";
+                    break;
                 case "qr_url":
                     await botClient.SendTextMessageAsync(chatId, "🔗 Введіть посилання для QR-коду:");
                     UserContext[chatId] = "url";
@@ -113,6 +117,56 @@ class Program
             return;
         }
         
+        if (message.Text != null && UserContext.TryGetValue(chatIdText, out var contextLogo) && contextLogo == "qr_with_logo")
+        {
+            string qrContent = message.Text.Trim();
+
+            if (!Uri.IsWellFormedUriString(qrContent, UriKind.Absolute))
+            {
+                await botClient.SendTextMessageAsync(chatIdText, "❗ Неправильний формат посилання. Будь ласка, введіть коректне посилання.");
+                return;
+            }
+
+            await botClient.SendTextMessageAsync(chatIdText, "🖼️ Надішліть логотип, який необхідно додати до QR-коду:");
+            UserContext[chatIdText] = $"logo:{qrContent}";
+            return;
+        }
+
+        if (message.Photo != null && UserContext.TryGetValue(chatIdText, out var contextPhoto) && contextPhoto.StartsWith("logo:"))
+        {
+            try
+            {
+                var linkToEmbed = contextPhoto.Replace("logo:", string.Empty);
+                var photo = message.Photo.Last();
+                var file = await botClient.GetFileAsync(photo.FileId, cancellationToken);
+                
+                using var logoStream = new MemoryStream();
+                await botClient.DownloadFileAsync(file.FilePath, logoStream, cancellationToken);
+                logoStream.Seek(0, SeekOrigin.Begin);
+                
+                var qrData = QRCodeGenerator.CreateQrCode(linkToEmbed, QRCodeGenerator.ECCLevel.M);
+                using var qrCode = new PngByteQrCode(qrData);
+                var qrBytes = qrCode.GetGraphic(10);
+                
+                var qrWithLogoBytes = InsertImageQRCode.AddLogoToQrCode(qrBytes, logoStream.ToArray(), 20, 20); // 20% від розміру QR-коду
+                
+                using var outputStream = new MemoryStream(qrWithLogoBytes);
+                await botClient.SendPhotoAsync(
+                    chatId: chatIdText,
+                    photo: new InputOnlineFile(outputStream, "qr_with_logo.png"),
+                    caption: $"✅ Ваш QR-код готовий!\n\nСкануючи цей QR-код, ви перейдете за посиланням: {linkToEmbed}"
+                );
+
+                UserContext.Remove(chatIdText);
+            }
+            catch (Exception ex)
+            {
+                await botClient.SendTextMessageAsync(chatIdText, $"❗ Сталася помилка: {ex.Message}");
+            }
+
+            return;
+        }
+
         if (message.Text == "/start")
         {
             var keyboard = new InlineKeyboardMarkup(new[]
@@ -135,6 +189,7 @@ class Program
                 new[]
                 {
                     InlineKeyboardButton.WithCallbackData("📷 Сканувати QR", "qr_scan"),
+                    InlineKeyboardButton.WithCallbackData("🖼️ Додати логотип", "qr_logo"),
                 }
             });
 
@@ -196,7 +251,7 @@ class Program
                 return;
             }
         }
-        
+
         if (message.Text != null)
         {
             var fallbackData = QRCodeGenerator.CreateQrCode(message.Text, QRCodeGenerator.ECCLevel.M);
