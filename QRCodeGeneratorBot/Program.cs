@@ -1,4 +1,4 @@
-﻿﻿using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
@@ -17,6 +17,8 @@ class Program
         public string Template { get; set; }
         public string Design { get; set; }
         public string QRData { get; set; }
+        public string QRColor { get; set; }
+        public string BGColor { get; set; }
         public byte[] ImageData { get; set; } 
     }
 
@@ -37,6 +39,8 @@ class Program
             if (!UserSettingsDict.ContainsKey(chatId))
                 UserSettingsDict[chatId] = new UserSettings();
 
+            var userSettings = UserSettingsDict[chatId];
+
             switch (callback.Data)
             {
                 case "set_template":
@@ -56,18 +60,32 @@ class Program
                         {
                             InlineKeyboardButton.WithCallbackData("📧 Email", "template_email"),
                             InlineKeyboardButton.WithCallbackData("📞 Телефон", "template_phone")
+                        },
+                        new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("🗺 Геолокація", "template_geo")
                         }
                     });
                     await botClient.SendTextMessageAsync(chatId, "Оберіть шаблон QR-коду:", replyMarkup: templateKeyboard);
                     break;
 
                 case "set_design":
-                    await botClient.SendTextMessageAsync(chatId, "🎨 Ви можете додати зображення до QR-коду. Надішліть зображення у відповідь на це повідомлення.");
-                    UserSettingsDict[chatId].Design = "logo";
-                    break;
-                
+                    var designKeyboard = new InlineKeyboardMarkup(new[]
+                    {
+                        new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("🖼 Додати зображення ", "add_image"),
+                            InlineKeyboardButton.WithCallbackData("🎨 Зміна кольору QR-коду", "change_qr_color")
+                        },
+                        new[]
+                        {
+                            InlineKeyboardButton.WithCallbackData("🌈 Зміна кольору фону", "change_bg_color"),
+                            InlineKeyboardButton.WithCallbackData("🔄 Скинути всі параметри", "reset_design")
+                        }
+                    });
+                    await botClient.SendTextMessageAsync(chatId, "🎨 Оберіть опцію дизайну QR-коду:", replyMarkup: designKeyboard);
+                    break; 
                 case "generate_qr":
-                    var userSettings = UserSettingsDict[chatId];
                     if (string.IsNullOrWhiteSpace(userSettings.Template) || string.IsNullOrWhiteSpace(userSettings.QRData))
                     {
                         await botClient.SendTextMessageAsync(chatId, "❗ Спочатку оберіть шаблон та введіть дані для QR-коду.");
@@ -77,15 +95,38 @@ class Program
                     {
                         var qrData = QRCodeGenerator.CreateQrCode(userSettings.QRData, QRCodeGenerator.ECCLevel.M);
                         using var qrCode = new PngByteQrCode(qrData);
-                        var qrBytes = qrCode.GetGraphic(10);
+                        var qrBytes = qrCode.GetGraphic(10); 
                         
-                        if (userSettings.Design == "logo" && userSettings.ImageData != null)
+                        using var ms = new MemoryStream(qrBytes);
+                        var originalBitmap = SKBitmap.Decode(ms); 
+        
+                        var colorChanger = new ChangeQRCodeColor();
+                        var foregroundColor = string.IsNullOrWhiteSpace(userSettings.QRColor) 
+                            ? SKColors.Black 
+                            : SKColor.Parse(userSettings.QRColor); 
+                        var backgroundColor = string.IsNullOrWhiteSpace(userSettings.BGColor) 
+                            ? SKColors.White 
+                            : SKColor.Parse(userSettings.BGColor); 
+
+                        var modifiedBitmap = colorChanger.ChangeColors(originalBitmap, foregroundColor, backgroundColor);
+                        
+                        using var imageStream = new MemoryStream();
+                        using (var skStream = new SKManagedWStream(imageStream))
                         {
-                            qrBytes = InsertImageQRCode.AddLogoToQrCode(qrBytes, userSettings.ImageData, 20, 20); 
+                            modifiedBitmap.Encode(skStream, SKEncodedImageFormat.Png, 100);
+                        }
+
+                        if (userSettings.ImageData != null)
+                        {
+                            qrBytes = InsertImageQRCode.AddLogoToQrCode(imageStream.ToArray(), userSettings.ImageData, 20, 20);
+                        }
+                        else
+                        {
+                            qrBytes = imageStream.ToArray(); 
                         }
                         
-                        using var stream = new MemoryStream(qrBytes);
-                        await botClient.SendPhotoAsync(chatId, new InputOnlineFile(stream, "qr_with_logo.png"), "✅ Ваш QR-код готовий!");
+                        using var resultStream = new MemoryStream(qrBytes);
+                        await botClient.SendPhotoAsync(chatId, new InputOnlineFile(resultStream, "qr_with_logo.png"), "✅ Ваш QR-код готовий!");
                     }
                     catch (Exception ex)
                     {
@@ -111,19 +152,35 @@ class Program
                     UserSettingsDict[chatId].Template = "contact";
                     await botClient.SendTextMessageAsync(chatId, "👤 Введіть контакт у форматі: 'Ім'я;Телефон;Email':");
                     break;
-
                 case "template_email":
                     UserSettingsDict[chatId].Template = "email";
                     await botClient.SendTextMessageAsync(chatId, "📧 Введіть email у форматі: 'Email;Тема;Повідомлення':");
                     break;
-
                 case "template_phone":
                     UserSettingsDict[chatId].Template = "phone";
                     await botClient.SendTextMessageAsync(chatId, "📞 Введіть номер телефону:");
                     break;
+                case "template_geo":
+                    UserSettingsDict[chatId].Template = "geo";
+                    await botClient.SendTextMessageAsync(chatId, "📍 Введіть координати у форматі: 'Широта,Довгота' (наприклад, 48.8588443,2.2943506 для Ейфелевої вежі).");
+                    break;
                 case "add_image":
                     await botClient.SendTextMessageAsync(chatId, "🖼 Надішліть зображення, яке буде інтегроване у QR-код.");
-                    UserSettingsDict[chatId].Design = "image";
+                    UserSettingsDict[chatId].Design = "logo";
+                    break;
+                case "change_qr_color":
+                    UserSettingsDict[chatId].Design = "qr_color";
+                    await botClient.SendTextMessageAsync(chatId, "🎨 Введіть колір QR-коду у форматі HEX (наприклад, #000000):");
+                    break;
+                case "change_bg_color":
+                    UserSettingsDict[chatId].Design = "bg_color";
+                    await botClient.SendTextMessageAsync(chatId, "🎨 Введіть колір фону у форматі HEX (наприклад, #FFFFFF):");
+                    break;
+                case "reset_design":
+                    UserSettingsDict[chatId].QRColor = null;
+                    UserSettingsDict[chatId].BGColor = null;
+                    UserSettingsDict[chatId].ImageData = null;
+                    await botClient.SendTextMessageAsync(chatId, "🔄 Усі параметри дизайну скинуто!");
                     break;
                 case "scan_qr":
                     await botClient.SendTextMessageAsync(chatId, "📷 Надішліть фото QR-коду для розпізнавання.");
@@ -151,7 +208,12 @@ class Program
 
         if (message.Text == "/start")
         {
-            var keyboard = new InlineKeyboardMarkup(new[]
+            await botClient.SendTextMessageAsync(chatIdMessage, "🇺🇦 👋 Вітаю! Я ваш бот для роботи з QR-кодами. Використовуйте команду /menu, щоб побачити доступні дії.");
+            return;
+        }
+        if (message.Text == "/menu")
+        {
+            var menuKeyboard = new InlineKeyboardMarkup(new[]
             {
                 new[]
                 {
@@ -165,7 +227,7 @@ class Program
                 }
             });
 
-            await botClient.SendTextMessageAsync(chatIdMessage, "👋 Привіт! Оберіть дію:", replyMarkup: keyboard);
+            await botClient.SendTextMessageAsync(chatIdMessage, "📋 Оберіть дію:", replyMarkup: menuKeyboard);
             return;
         }
         if (message.Photo != null && currentUserSettings.Template == "scan")
@@ -211,22 +273,56 @@ class Program
         {
             try
             {
-                var photo = message.Photo.Last(); 
+                var photo = message.Photo.Last();
                 var file = await botClient.GetFileAsync(photo.FileId, cancellationToken);
 
                 using var logoStream = new MemoryStream();
                 await botClient.DownloadFileAsync(file.FilePath, logoStream, cancellationToken);
-                currentUserSettings.ImageData = logoStream.ToArray(); 
+                currentUserSettings.ImageData = logoStream.ToArray();
 
-                await botClient.SendTextMessageAsync(chatIdMessage, "✅Зображення успішно додано.");
+                await botClient.SendTextMessageAsync(chatIdMessage, "✅ Зображення успішно додано.");
+                currentUserSettings.Design = string.Empty; 
             }
             catch (Exception ex)
             {
                 await botClient.SendTextMessageAsync(chatIdMessage, $"❗ Помилка додавання зображення: {ex.Message}");
             }
         }
-       
-        if (!string.IsNullOrWhiteSpace(currentUserSettings.Template))
+
+        if (!string.IsNullOrWhiteSpace(currentUserSettings.Design))
+        {
+            switch(currentUserSettings.Design)
+            {
+                case "qr_color":
+                    if (!message.Text.StartsWith("#") || message.Text.Length != 7)
+                    {
+                        await botClient.SendTextMessageAsync(chatIdMessage, "❗ Неправильний формат кольору. Використовуйте формат HEX.");
+                    }
+                    else
+                    {
+                        currentUserSettings.QRColor = message.Text.Trim();
+                        await botClient.SendTextMessageAsync(chatIdMessage, "✅ Колір QR-коду успішно змінено!");
+                    }
+                    break;
+
+                case "bg_color":
+                    if (!message.Text.StartsWith("#") || message.Text.Length != 7)
+                    {
+                        await botClient.SendTextMessageAsync(chatIdMessage, "❗ Неправильний формат кольору. Використовуйте формат HEX (наприклад: #FFFFFF).");
+                    }
+                    else
+                    {
+                        currentUserSettings.BGColor = message.Text.Trim();
+                        await botClient.SendTextMessageAsync(chatIdMessage, "✅ Колір фону QR-коду успішно змінено.");
+                    }
+                    break;
+                default:
+                await botClient.SendTextMessageAsync(chatIdMessage, "❗ Невідома команда для дизайну.");
+                break;
+            }
+            currentUserSettings.Design = string.Empty;
+        }
+        else if (!string.IsNullOrWhiteSpace(currentUserSettings.Template))
         {
             try
             {
@@ -267,11 +363,12 @@ class Program
                         currentUserSettings.QRData = $"tel:{message.Text.Trim()}";
                         await botClient.SendTextMessageAsync(chatIdMessage, "✅ Телефон збережено.");
                         break;
-                    case "scan":
-                        await botClient.SendTextMessageAsync(chatIdMessage, "📷 Надішліть фото для сканування.");
-                        break;
-                    default:
-                        await botClient.SendTextMessageAsync(chatIdMessage, "❗ Невідомий шаблон.");
+                    case "geo":
+                        var geoParts = message.Text.Split(',');
+                        if (geoParts.Length != 2 || !double.TryParse(geoParts[0], out _) || !double.TryParse(geoParts[1], out _))
+                            throw new Exception("❗ Формат: Широта,Довгота (наприклад: 48.8588443,2.2943506)");
+                        currentUserSettings.QRData = $"geo:{geoParts[0]},{geoParts[1]}";
+                        await botClient.SendTextMessageAsync(chatIdMessage, "✅ Дані геолокації збережено.");
                         break;
                 }
             }
@@ -280,8 +377,8 @@ class Program
                 await botClient.SendTextMessageAsync(chatIdMessage, ex.Message);
             }
         }
-        
     }
+    
     private static Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
     {
         Console.WriteLine($"❌ Error: {exception.Message}");
