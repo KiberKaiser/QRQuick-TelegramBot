@@ -10,8 +10,7 @@ using SkiaSharp;
 class Program
 {
     private static readonly TelegramBotClient Bot = new TelegramBotClient("NUMBER_TOKEN");
-        private static readonly Dictionary<long, UserSettings> UserSettingsDict = new();
-
+    private static readonly Dictionary<long, UserSettings> UserSettingsDict = new();
     class UserSettings
     {
         public string Template { get; set; }
@@ -19,7 +18,8 @@ class Program
         public string QRData { get; set; }
         public string QRColor { get; set; }
         public string BGColor { get; set; }
-        public byte[] ImageData { get; set; } 
+        public byte[] ImageData { get; set; }
+        
     }
 
     static async Task Main()
@@ -33,6 +33,7 @@ class Program
     {
         if (update.CallbackQuery != null)
         {
+            
             var callback = update.CallbackQuery;
             var chatId = callback.Message.Chat.Id;
 
@@ -162,7 +163,7 @@ class Program
                     break;
                 case "template_geo":
                     UserSettingsDict[chatId].Template = "geo";
-                    await botClient.SendTextMessageAsync(chatId, "📍 Введіть координати у форматі: 'Широта,Довгота' (наприклад, 48.8588443,2.2943506 для Ейфелевої вежі).");
+                    await botClient.SendTextMessageAsync(chatId, "📍 Введіть координати у форматі: 'Широта,Довгота' (наприклад, 48.8588443,2.2943506).");
                     break;
                 case "add_image":
                     await botClient.SendTextMessageAsync(chatId, "🖼 Надішліть зображення, яке буде інтегроване у QR-код.");
@@ -230,6 +231,7 @@ class Program
             await botClient.SendTextMessageAsync(chatIdMessage, "📋 Оберіть дію:", replyMarkup: menuKeyboard);
             return;
         }
+        
         if (message.Photo != null && currentUserSettings.Template == "scan")
         {
             var photo = message.Photo.Last();
@@ -288,7 +290,7 @@ class Program
                 await botClient.SendTextMessageAsync(chatIdMessage, $"❗ Помилка додавання зображення: {ex.Message}");
             }
         }
-
+    
         if (!string.IsNullOrWhiteSpace(currentUserSettings.Design))
         {
             switch(currentUserSettings.Design)
@@ -296,7 +298,7 @@ class Program
                 case "qr_color":
                     if (!message.Text.StartsWith("#") || message.Text.Length != 7)
                     {
-                        await botClient.SendTextMessageAsync(chatIdMessage, "❗ Неправильний формат кольору. Використовуйте формат HEX.");
+                        await botClient.SendTextMessageAsync(chatIdMessage, "❗ Неправильний формат кольору. Використовуйте формат HEX(наприклад: #FFFFFF).");
                     }
                     else
                     {
@@ -308,7 +310,7 @@ class Program
                 case "bg_color":
                     if (!message.Text.StartsWith("#") || message.Text.Length != 7)
                     {
-                        await botClient.SendTextMessageAsync(chatIdMessage, "❗ Неправильний формат кольору. Використовуйте формат HEX (наприклад: #FFFFFF).");
+                        await botClient.SendTextMessageAsync(chatIdMessage, "❗ Неправильний формат кольору. Використовуйте формат HEX (наприклад: #000000).");
                     }
                     else
                     {
@@ -332,9 +334,12 @@ class Program
                         if (!Uri.IsWellFormedUriString(message.Text.Trim(), UriKind.Absolute))
                             throw new Exception("❗ Неправильний формат посилання.");
                         currentUserSettings.QRData = message.Text.Trim();
-                        await botClient.SendTextMessageAsync(chatIdMessage, "✅ Дані для QR-коду збережено.");
+                        await botClient.SendTextMessageAsync(chatIdMessage, "✅ Посилання для QR-коду збережено.");
                         break;
                     case "text":
+                        var urlRegex = @"(http(s)?://|www\.)\S+"; 
+                        if (System.Text.RegularExpressions.Regex.IsMatch(message.Text.Trim(), urlRegex, System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                            throw new Exception("❗ Текст не може містити посилання або URL-адреси.");
                         currentUserSettings.QRData = message.Text.Trim();
                         await botClient.SendTextMessageAsync(chatIdMessage, "✅ Текст для QR-коду збережено.");
                         break;
@@ -360,8 +365,11 @@ class Program
                         await botClient.SendTextMessageAsync(chatIdMessage, "✅ Дані email збережено.");
                         break;
                     case "phone":
+                        var phoneRegex = @"^\+?\d{10,15}$";
+                        if (!System.Text.RegularExpressions.Regex.IsMatch(message.Text.Trim(), phoneRegex))
+                            throw new Exception("Невірний формат номера телефону. Використовуйте міжнародний формат, наприклад: +380474747474.");
                         currentUserSettings.QRData = $"tel:{message.Text.Trim()}";
-                        await botClient.SendTextMessageAsync(chatIdMessage, "✅ Телефон збережено.");
+                        await botClient.SendTextMessageAsync(chatIdMessage, "✅ Дані номеру телефона збережено.");
                         break;
                     case "geo":
                         var geoParts = message.Text.Split(',');
