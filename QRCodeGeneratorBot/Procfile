@@ -1,1 +1,1 @@
-telegram: dotnet run --project QRCodeGeneratorBot
+telegram: dotnet run --project QRCodeGeneratorBot/QRCodeGeneratorBot.csproj
