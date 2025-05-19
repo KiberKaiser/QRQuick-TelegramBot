@@ -9,7 +9,9 @@ using SkiaSharp;
 
 class Program
 {
-    private static readonly TelegramBotClient Bot = new TelegramBotClient("NUMBER_TOKEN");
+    private static readonly TelegramBotClient Bot = new TelegramBotClient(
+        Environment.GetEnvironmentVariable("TELEGRAM_BOT_TOKEN") ?? throw new InvalidOperationException("Bot token is not set.")
+    );
     private static readonly Dictionary<long, UserSettings> UserSettingsDict = new();
     private static readonly Translator Translator = new Translator();
     class UserSettings
