@@ -4,17 +4,25 @@ WORKDIR /app
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["QRCodeGeneratorBot.csproj", "./"]
-RUN dotnet restore "QRCodeGeneratorBot.csproj"
 
 COPY . .
+
+RUN dotnet restore "QRCodeGeneratorBot.csproj"
+
 RUN dotnet build "QRCodeGeneratorBot.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "QRCodeGeneratorBot.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "QRCodeGeneratorBot.csproj" \
+    -c $BUILD_CONFIGURATION \
+    -r linux-x64 \
+    -o /app/publish \
+    /p:UseAppHost=false \
+    /p:SelfContained=true \
+    /p:PublishSingleFile=true
+
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "QRCodeGeneratorBot.dll"]
+ENTRYPOINT ["./QRCodeGeneratorBot"]
