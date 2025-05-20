@@ -16,7 +16,6 @@ RUN dotnet publish "QRCodeGeneratorBot.csproj" \
     -c $BUILD_CONFIGURATION \
     -r linux-x64 \
     --self-contained true \
-    -p:PublishSingleFile=true \
     -o /app/publish
 
 FROM base AS final
