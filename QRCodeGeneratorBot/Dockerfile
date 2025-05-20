@@ -8,7 +8,6 @@ WORKDIR /src
 COPY . .
 
 RUN dotnet restore "QRCodeGeneratorBot.csproj"
-
 RUN dotnet build "QRCodeGeneratorBot.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
@@ -16,13 +15,12 @@ ARG BUILD_CONFIGURATION=Release
 RUN dotnet publish "QRCodeGeneratorBot.csproj" \
     -c $BUILD_CONFIGURATION \
     -r linux-x64 \
-    -o /app/publish \
-    /p:UseAppHost=false \
-    /p:SelfContained=true \
-    /p:PublishSingleFile=true
-
+    --self-contained true \
+    -p:PublishSingleFile=true \
+    -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+
 ENTRYPOINT ["./QRCodeGeneratorBot"]
