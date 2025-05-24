@@ -2,4 +2,4 @@ build:
   docker:
     worker: Dockerfile
 run:
-  worker: cd $HOME/heroku_output && ./QRCodeGeneratorBot
+  worker: ./QRCodeGeneratorBot
