@@ -1,2 +1,1 @@
-worker: dotnet QRCodeGeneratorBot.dll
-
+worker: dotnet bin/Debug/net6.0/QRCodeGeneratorBot.dll
