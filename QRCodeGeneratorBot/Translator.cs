@@ -60,18 +60,29 @@ public class Translator
     };
 
     public string Translate(string text, string languageCode)
-   {
-       text = text.Trim();
+    {
+        text = text.Trim();
 
-       if (languageCode == "ua")
-           return text;
+        if (languageCode == "en")
+        {
+            if (!_translations.TryGetValue(text, out var translation))
+            {
+                Console.WriteLine($"[Translate] No translation found for: '{text}'");
+                return text;
+            }
 
-       if (!_translations.TryGetValue(text, out var translation))
-       {
-           Console.WriteLine($"[Translate] No translation found for: '{text}'");
-           return text; 
-       }
+            return translation;
+        }
+        else
+        {
+        var entry = _translations.FirstOrDefault(x => x.Value == text);
+            if (entry.Key == null)
+            {
+                Console.WriteLine($"[Translate] No translation found for: '{text}'");
+                return text;
+            }
 
-       return translation;
-   }
+            return entry.Key;
+        }
+    }
 }
