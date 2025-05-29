@@ -46,6 +46,10 @@ class Program
                 InlineKeyboardButton.WithCallbackData(Translator.Translate("📷 Декодувати QR-код", userSettings.Language), "scan_qr"),
             }
         });
+        
+        await Bot.SendTextMessageAsync(chatId, 
+            Translator.Translate("📋 Оберіть дію:", userSettings.Language), 
+            replyMarkup: menuKeyboard);
     }
     private static async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
