@@ -144,9 +144,10 @@ class Program
                     break;   
 
                 case "generate_qr":
-                    if (string.IsNullOrWhiteSpace(userSettings.Template) || string.IsNullOrWhiteSpace(userSettings.QRData))
+                    if (string.IsNullOrWhiteSpace(userSettings.QRData))
                     {
                         await botClient.SendTextMessageAsync(chatId, Translator.Translate("❗ Спочатку оберіть шаблон та введіть дані для QR-коду.", userSettings.Language));
+                        await SendMainMenu(chatId, userSettings);
                         break;
                     }
                     try
