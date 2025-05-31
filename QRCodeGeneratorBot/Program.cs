@@ -112,6 +112,10 @@ class Program
                         },
                         new[]
                         {
+                          InlineKeyboardButton.WithCallbackData(Translator.Translate("🔄 Скинути шаблон і зміст", userSettings.Language), "reset_template")
+                        },
+                        new[]
+                        {
                             InlineKeyboardButton.WithCallbackData(Translator.Translate("▶️ Назад до меню", userSettings.Language), "back_to_menu")
                         }
                     });
@@ -129,7 +133,7 @@ class Program
                         new[]
                         {
                             InlineKeyboardButton.WithCallbackData(Translator.Translate("🌈 Зміна кольору фону", userSettings.Language), "change_bg_color"),
-                            InlineKeyboardButton.WithCallbackData(Translator.Translate("🔄 Скинути всі параметри", userSettings.Language), "reset_design")
+                            InlineKeyboardButton.WithCallbackData(Translator.Translate("🔄 Скинути всі параметри дизайну", userSettings.Language), "reset_design")
                         },
                         new[]
                         {
@@ -242,9 +246,16 @@ class Program
                     await botClient.SendTextMessageAsync(chatId, Translator.Translate("🔄 Усі параметри дизайну скинуто!", userSettings.Language));
                     await SendMainMenu(chatId, userSettings);
                     break;
+                case "reset_template":
+                    UserSettingsDict[chatId].QRData = null;
+                    UserSettingsDict[chatId].Template = null;
+                    await botClient.SendTextMessageAsync(chatId, Translator.Translate("🔄 Шаблон та його зміст скинуто!", userSettings.Language));
+                    await SendMainMenu(chatId, userSettings); 
+                    break;
                 case "scan_qr":
                     await botClient.SendTextMessageAsync(chatId, Translator.Translate("📷 Надішліть фото QR-коду для розпізнавання.", userSettings.Language));
                     UserSettingsDict[chatId].Template = "scan";
+                    await SendMainMenu(chatId, userSettings);
                     break;
                 default: 
                     await botClient.SendTextMessageAsync(chatId, Translator.Translate("Невідома команда", userSettings.Language));
@@ -330,7 +341,6 @@ class Program
             else
             {
                 await botClient.SendTextMessageAsync(chatIdMessage, Translator.Translate("❌ QR-код не розпізнано.", currentUserSettings.Language));
-                
             }
             currentUserSettings.Template = string.Empty;
             await SendMainMenu(chatIdMessage, currentUserSettings);
