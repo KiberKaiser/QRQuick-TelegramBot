@@ -267,6 +267,8 @@ class Program
 
         if (message.Text == "/start")
         {
+            currentUserSettings.Template = string.Empty;
+            currentUserSettings.Design = string.Empty;
             var languageKeyboard = new InlineKeyboardMarkup(new[]
             {
                 new []
@@ -276,10 +278,14 @@ class Program
                 }
             });
             await botClient.SendTextMessageAsync(chatIdMessage, "Сhoose your language / Оберіть мову: ", replyMarkup: languageKeyboard);
+            return;
         }
         
         if (message.Text == "/menu")
         {
+            currentUserSettings.Template = string.Empty;
+            currentUserSettings.Design = string.Empty;
+            
             await SendMainMenu(chatIdMessage, currentUserSettings);
             return;
         }
@@ -440,10 +446,13 @@ class Program
                         await botClient.SendTextMessageAsync(chatIdMessage, Translator.Translate("✅ Дані геолокації збережено.", currentUserSettings.Language));
                         break;
                 }
+                currentUserSettings.Template = string.Empty;
+                await SendMainMenu(chatIdMessage, currentUserSettings);
             }
             catch (Exception ex)
             {
                 await botClient.SendTextMessageAsync(chatIdMessage, ex.Message);
+                currentUserSettings.Template = string.Empty;
                 await SendMainMenu(chatIdMessage, currentUserSettings);
             }
         }
