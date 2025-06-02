@@ -255,7 +255,6 @@ class Program
                 case "scan_qr":
                     await botClient.SendTextMessageAsync(chatId, Translator.Translate("📷 Надішліть фото QR-коду для розпізнавання.", userSettings.Language));
                     UserSettingsDict[chatId].Template = "scan";
-                    await SendMainMenu(chatId, userSettings);
                     break;
                 default: 
                     await botClient.SendTextMessageAsync(chatId, Translator.Translate("Невідома команда", userSettings.Language));
