@@ -1,7 +1,7 @@
 ![bannegqrcodequick](https://github.com/user-attachments/assets/3aaed914-aec1-4510-9c25-b95a59b4e366)
 
 ## **QRCodeQuick** is a powerful Telegram bot for generating and decoding QR codes. It supports multiple QR code templates and design customization.
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)]
+![Deploy](https://www.herokucdn.com/deploy/button.svg)
 ### 🔗 Link in Telegram: [QRCodeQuick_Bot](https://t.me/QRCodeQuick_Bot)
 
 ### 🔹 QR Code Generation templates:
